@@ -21,25 +21,45 @@ valid_binary_puzzle_row(Row) :-
     global_cardinality(Row, [0-HL, 1-HL]),
     no_triplets(Row).
 
-no_triplets(List) :-
-    length(List, L),
-    L < 3.
-
 no_triplets([X, Y, Z | Rem]) :-
     X + Y + Z #> 0,
     X + Y + Z #< 3,
     no_triplets([Y, Z | Rem]).
 
+no_triplets(List) :-
+    length(List, L),
+    L < 3.
+
+all_combinations(E, [L|List], [[E, L]|Out]) :-
+    all_combinations(E, List, Out).
+
+all_combinations(_E, [], []).
+
+unique_combinations([L|List], Out) :-
+    all_combinations(L, List, First),
+    unique_combinations(List, Second),
+    append([First, Second], Out).
+
+unique_combinations([], []).
+
 all_distinct_lists(Lists) :-
-    select(L1, Lists, OtherLists),
-    member(L2, OtherLists),
-    distinct_lists(L1, L2).
+    unique_combinations(Lists, ListPairs),
+    maplist(apply(distinct_lists), ListPairs).
 
-distinct_lists([], []).
+distinct_lists(L1, L2) :-
+    list_to_num(L1, N1),
+    list_to_num(L2, N2),
+    N1 #\= N2.
 
-distinct_lists([V1 | L1], [V2 | L2]) :-
-    V1 #\= V2,
-    distinct_lists(L1, L2).
+list_to_num(List, Num) :-
+    list_to_num_aux(List, 1, Num).
+
+list_to_num_aux([E|List], N, Num) :-
+    N2 is N * 2,
+    list_to_num_aux(List, N2, NumP),
+    Num #= E*N + NumP.
+
+list_to_num_aux([], N, N).
 
 print_binary_puzzle_solution(Rows) :-
     binary_puzzle(Rows),
